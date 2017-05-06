@@ -7,94 +7,119 @@ var colorScheme = {
   "C": 3
 }
 
-// var Link = React.createClass({
-//   render: function() {
-//     return (
-//       <line
-//         x1={this.props.datum.source.x}
-//         y1={this.props.datum.source.y}
-//         x2={this.props.datum.target.x}
-//         y2={this.props.datum.target.y}
-//         style={{
-//           "stroke":"#999",
-//           "strokeOpacity":".6",
-//           "strokeWidth": this.props.datum.strokeWidth
-//         }}
-//       />
-//     );
-//   }
-// });
-//
-// var Node = React.createClass({
-//   move: function(event) {
-//     console.log(event.target);
-//     this.props.updateNode(this.props.index, 1);
-//   },
-//
-//   render: function() {
-//     return (
-//       <circle
-//         r={5}
-//         cx={this.props.fx ? this.props.fx : this.props.x}
-//         cy={this.props.fy ? this.props.fy : this.props.y}
-//         fx={this.props.fx ? this.props.fx : null}
-//         fy={this.props.fy ? this.props.fy : null}
-//         style={{
-//           "fill": color(this.props.group),
-//           "stroke":"#fff",
-//           "strokeWidth":"1.5px"
-//         }}
-//         onClick={this.move}
-//       />
-//     )
-//   }
-// });
-
-
-var App = React.createClass({
+var Model = React.createClass({
   getInitialState: function() {
-    var svgWidth = 1200;
-    var svgHeight = 1200;
     var force = d3.layout.force()
-      .charge(-120)
-      .linkDistance(30)
-      .size([svgWidth, svgHeight]);
+      .charge(-300)
+      .linkDistance(50)
+      .size([this.props.svgWidth, this.props.svgHeight]);
 
     return {
       bases: "AT",
       dbn: "()",
-      error: "",
-      force: force,
-      links: [{source: 1, target: 0, strokeWidth: 2}],
-      nodes: [{base: "A", group: 0, key: 0}, {base: "T", group: 1, key: 1}],
-      svgHeight: svgHeight,
-      svgWidth: svgWidth
+      force: force
     }
   },
 
   shouldComponentUpdate(nextProps, nextState) {
-    // console.log(nextState.nodes)
-    // this.updateGraph(nextState.nodes, nextState.links);
-    // return true
+    this.d3Graph = d3.select(ReactDOM.findDOMNode(this.refs.graph));
+
+    var d3Nodes = this.d3Graph.selectAll('.node')
+      .data(nextProps.nodes, (node) => node.key);
+    d3Nodes.enter().append('g').call(this.enterNode);
+    d3Nodes.exit().remove();
+    d3Nodes.call(this.updateNode);
+
+    var d3Links = this.d3Graph.selectAll('.link')
+      .data(nextProps.links, (link) => link.key);
+    d3Links.enter().insert('line', '.node').call(this.enterLink);
+    d3Links.exit().remove();
+    d3Links.call(this.updateLink);
+
+    this.state.force.nodes(nextProps.nodes).links(nextProps.links);
+    this.state.force.start();
+
+    return false;
   },
 
   componentDidMount: function() {
     this.d3Graph = d3.select(ReactDOM.findDOMNode(this.refs.graph));
-    // this.updateGraph(this.state.nodes, this.state.links);
     this.state.force.on('tick', (tick) => {
       this.d3Graph.call(this.updateGraph);
     });
+    //TODO: just for testing, remove later:
+    this.setState({bases: "AT"})
+  },
+
+  enterLink: function(selection) {
+    selection.classed('link', true)
+      .attr("stroke-width", (d) => d.strokeWidth);
+  },
+
+  enterNode: function(selection) {
+    selection.classed('node', true);
+
+    selection.append('circle')
+      .attr("r", (d) => d.size)
+      .call(this.state.force.drag);
+
+    selection.append('text')
+      .attr("x", (d) => d.size + 5)
+      .attr("dy", ".35em")
+      .text((d) => d.base);
   },
 
   updateGraph: function(selection) {
     console.log('updating graph')
     selection.selectAll('.node')
-      .call(updateNode);
+      .call(this.updateNode);
     selection.selectAll('.link')
-      .call(updateLink);
+      .call(this.updateLink);
+  },
+
+  updateLink: function(selection) {
+    selection.attr("x1", (d) => d.source.x)
+      .attr("y1", (d) => d.source.y)
+      .attr("x2", (d) => d.target.x)
+      .attr("y2", (d) => d.target.y);
+  },
+
+  updateNode: function(selection) {
+    selection.attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+  },
+
+  render: function() {
+    return (
+      <div>
+        <svg width={this.props.svgWidth} height={this.props.svgHeight}>
+          <g ref='graph' />
+        </svg>
+      </div>
+    )
+  }
+});
+
+var App = React.createClass({
+  getInitialState: function() {
+    var svgWidth = 1200;
+    var svgHeight = 1200;
+
+    return {
+      error: "",
+      links: [{source: 1, target: 0, strokeWidth: 5}],
+      nodes: [{base: "A", group: 0, size: 5, key: 0, x: 300, y: 300}, {base: "T", group: 1, size: 5, key: 1, x: 300, y: 500}],
+      svgHeight: svgHeight,
+      svgWidth: svgWidth
+    }
+  },
+
+  componentDidMount() {
+    //TODO: just for testing, remove later:
+    this.setState({error: 'testing'});
   },
 
   updateSequence: function() {
+    debugger
     var sequence = document.getElementById('input-sequence').value;
     var dbn = document.getElementById('input-dbn').value;
 
@@ -114,7 +139,8 @@ var App = React.createClass({
       nodes.push({
         base: sequence[i],
         group: colorScheme[sequence[i]],
-        key: i
+        key: i,
+        size: 5
       });
     }
 
@@ -147,6 +173,9 @@ var App = React.createClass({
       return;
     }
 
+    console.log(nodes)
+    console.log(links)
+
     this.setState({
       error: "",
       nodes: nodes,
@@ -159,14 +188,18 @@ var App = React.createClass({
       <div>
         <input id="input-sequence" type="text"/>
         <input id="input-dbn" type="text"/>
-        <button onClick={this.updateSequence}>Display</button>
+        <button className="display-btn" onClick={this.updateSequence}>Display</button>
         <div id="error">{this.state.error}</div>
-        <svg width={this.state.svgWidth} height={this.state.svgHeight}>
-          <g ref='graph' />
-        </svg>
+        <Model
+          links={this.state.links}
+          nodes={this.state.nodes}
+          svgHeight={this.state.svgHeight}
+          svgWidth={this.state.svgWidth}
+        />
       </div>
     )
   }
+
 });
 
 ReactDOM.render(<App/>, document.getElementById('root'));

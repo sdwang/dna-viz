@@ -26,18 +26,26 @@ var Link = React.createClass({
 });
 
 var Node = React.createClass({
+  move: function(event) {
+    console.log(event.target);
+    this.props.updateNode(this.props.index, 1);
+  },
+
   render: function() {
     return (
-        <circle
-          r={5}
-          cx={this.props.x}
-          cy={this.props.y}
-          style={{
-            "fill": color(this.props.group),
-            "stroke":"#fff",
-            "strokeWidth":"1.5px"
-          }}
-        />
+      <circle
+        r={5}
+        cx={this.props.fx ? this.props.fx : this.props.x}
+        cy={this.props.fy ? this.props.fy : this.props.y}
+        fx={this.props.fx ? this.props.fx : null}
+        fy={this.props.fy ? this.props.fy : null}
+        style={{
+          "fill": color(this.props.group),
+          "stroke":"#fff",
+          "strokeWidth":"1.5px"
+        }}
+        onClick={this.move}
+      />
     )
   }
 });
@@ -54,13 +62,20 @@ var Model = React.createClass({
   },
 
   drawNodes: function() {
-    var nodes = this.props.nodes.map(function (node, index) {
-      return (<Node
-        key={index}
-        x={node.x}
-        y={node.y}
-        group={node.group}/>
-      ) })
+    var nodes = this.props.nodes.map((node, index) => {
+      return (
+        <Node
+          group={node.group}
+          index={node.key}
+          key={node.key}
+          updateNode={this.props.updateNode}
+          x={node.x}
+          y={node.y}
+          fx={node.fx}
+          fy={node.fy}
+        />
+      )
+    });
     return nodes;
   },
 
@@ -98,13 +113,14 @@ var App = React.createClass({
       error: "",
       force: force,
       links: [{source: 1, target: 0, strokeWidth: 2}],
-      nodes: [{base: "A", group: 0}, {base: "T", group: 1}],
+      nodes: [{base: "A", group: 0, key: 0}, {base: "T", group: 1, key: 1}],
       svgHeight: svgHeight,
       svgWidth: svgWidth
     }
   },
 
   shouldComponentUpdate(nextProps, nextState) {
+    console.log(nextState.nodes)
     this.updateGraph(nextState.nodes, nextState.links);
     return true
   },
@@ -116,11 +132,42 @@ var App = React.createClass({
     });
   },
 
+  // drag: function() {
+  //   force.drag().on("dragstart", dragstart);
+  // },
+  //
+  // dragstart: function(d) {
+  //   d3.select(this).classed("fixed", d.fixed = true);
+  // },
+
   updateGraph: function(nodes, links) {
+    console.log('updating graph')
     this.state.force
     .nodes(nodes)
     .links(links)
     .start();
+  },
+
+  updateNode: function(key, x) {
+    var nodes = this.state.nodes.slice();
+    nodes[key].fx = x;
+    nodes[key].x = x;
+    var links = this.state.links.slice();
+    links = links.map((link) => {
+      link.source.x = null;
+      link.source.y = null;
+      link.target.x = null;
+      link.target.y = null;
+      return link;
+    });
+    this.setState({nodes, links});
+    // this.updateGraph();
+  },
+
+  updateLinks: function() {
+    console.log('updating links')
+    console.log('this')
+    this.state.force.links(this.state.links).start();
   },
 
   updateSequence: function() {
@@ -142,7 +189,8 @@ var App = React.createClass({
 
       nodes.push({
         base: sequence[i],
-        group: colorScheme[sequence[i]]
+        group: colorScheme[sequence[i]],
+        key: i
       });
     }
 
@@ -187,15 +235,16 @@ var App = React.createClass({
       <div>
         <input id="input-sequence" type="text"/>
         <input id="input-dbn" type="text"/>
-        <button onClick={this.updateSequence}/>
+        <button onClick={this.updateSequence}>Display</button>
         <div id="error">{this.state.error}</div>
         <Model
           bases={this.state.bases}
           dbn={this.state.dbn}
-          nodes={this.state.nodes}
           links={this.state.links}
-          svgWidth={this.state.svgWidth}
+          nodes={this.state.nodes}
           svgHeight={this.state.svgHeight}
+          svgWidth={this.state.svgWidth}
+          updateNode={this.updateNode}
         />
       </div>
     )

@@ -14,6 +14,8 @@ var Model = React.createClass({
       .linkDistance(50)
       .size([this.props.svgWidth, this.props.svgHeight]);
 
+    this.drag = force.drag().on('dragstart', this.dragstart);
+
     return {
       bases: "AT",
       dbn: "()",
@@ -47,8 +49,14 @@ var Model = React.createClass({
     this.state.force.on('tick', (tick) => {
       this.d3Graph.call(this.updateGraph);
     });
-    //TODO: just for testing, remove later:
-    this.setState({bases: "AT"})
+  },
+
+  dblclick: function(d) {
+    d3.select(this).classed("fixed", d.fixed = false);
+  },
+
+  dragstart: function(d) {
+    d3.select(this).classed("fixed", d.fixed = true);
   },
 
   enterLink: function(selection) {
@@ -61,7 +69,7 @@ var Model = React.createClass({
 
     selection.append('circle')
       .attr("r", (d) => d.size)
-      .call(this.state.force.drag);
+      .call(this.drag)
 
     selection.append('text')
       .attr("x", (d) => d.size + 5)
@@ -119,7 +127,6 @@ var App = React.createClass({
   },
 
   updateSequence: function() {
-    debugger
     var sequence = document.getElementById('input-sequence').value;
     var dbn = document.getElementById('input-dbn').value;
 

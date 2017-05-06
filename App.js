@@ -1,5 +1,11 @@
 
 var color = d3.scale.category20();
+var colorScheme = {
+  "A": 0,
+  "T": 1,
+  "G": 2,
+  "C": 3
+}
 
 var Link = React.createClass({
   render: function() {
@@ -12,7 +18,7 @@ var Link = React.createClass({
         style={{
           "stroke":"#999",
           "strokeOpacity":".6",
-          "strokeWidth": Math.sqrt(this.props.datum.value)
+          "strokeWidth": this.props.datum.strokeWidth
         }}
       />
     );
@@ -79,22 +85,28 @@ var Model = React.createClass({
 
 var App = React.createClass({
   getInitialState: function() {
-    var svgWidth = 500;
-    var svgHeight = 500;
+    var svgWidth = 1200;
+    var svgHeight = 1200;
     var force = d3.layout.force()
       .charge(-120)
       .linkDistance(30)
       .size([svgWidth, svgHeight]);
 
     return {
-      svgWidth: svgWidth,
-      svgHeight: svgHeight,
-      force: force,
       bases: "AT",
       dbn: "()",
-      nodes: [{name: "A"}, {name: "T"}],
-      links: [{source: 1, target: 0, value: 3}]
+      error: "",
+      force: force,
+      links: [{source: 1, target: 0, strokeWidth: 2}],
+      nodes: [{base: "A", group: 0}, {base: "T", group: 1}],
+      svgHeight: svgHeight,
+      svgWidth: svgWidth
     }
+  },
+
+  shouldComponentUpdate(nextProps, nextState) {
+    this.updateGraph(nextState.nodes, nextState.links);
+    return true
   },
 
   componentDidMount: function() {
@@ -104,31 +116,79 @@ var App = React.createClass({
     });
   },
 
-  shouldComponentUpdate(nextProps, nextState) {
-    this.updateGraph(nextState.nodes, nextState.links);
-    return true
-  },
-
-  componentWillMount: function() {
-    var self = this;
-    setTimeout(function() {
-      self.setState({
-        nodes: [{name: "A"}, {name: "T"}, {name: "C"}],
-        links: [{source: 1, target: 0, value: 3}]
-      })
-    }, 5000)
-  },
-
   updateGraph: function(nodes, links) {
     this.state.force
-      .nodes(nodes)
-      .links(links)
-      .start();
+    .nodes(nodes)
+    .links(links)
+    .start();
+  },
+
+  updateSequence: function() {
+    var sequence = document.getElementById('input-sequence').value;
+    var dbn = document.getElementById('input-dbn').value;
+
+    if(sequence.length !== dbn.length) {
+      this.setState({error: "Sequence and DBN length do not match"});
+      return;
+    }
+
+    var nodes = [];
+
+    for(var i = 0; i < sequence.length; i++) {
+      if(colorScheme[sequence[i]] === undefined) {
+        this.setState({error: 'Invalid sequence.  May only contain "A" , "T" , "G", or "C"'});
+        return;
+      }
+
+      nodes.push({
+        base: sequence[i],
+        group: colorScheme[sequence[i]]
+      });
+    }
+
+    var links = [];
+    var basePairStack = [];
+
+    for(var i = 0; i < dbn.length; i++) {
+      if(".()".indexOf(dbn[i]) === -1) {
+        this.setState({error: 'Invalid DBN.  May only contain " ( " , " ) " , or " . "'});
+        return;
+      }
+      if(i > 0) {
+        links.push({source: i - 1, target: i, strokeWidth: 2});
+      }
+      if(dbn[i] === "(") {
+        basePairStack.push(i);
+      }
+      if(dbn[i] === ")") {
+        if(basePairStack.length === 0) {
+          this.setState({error: "Invalid DBN.  Missing starting parenthesis"});
+          return;
+        } else {
+          links.push({source: basePairStack.pop(), target: i, strokeWidth: 4});
+        }
+      }
+    }
+
+    if(basePairStack.length > 0) {
+      this.setState({error: "Invalid DBN.  Missing closing parenthesis"});
+      return;
+    }
+
+    this.setState({
+      error: "",
+      nodes: nodes,
+      links: links
+    });
   },
 
   render: function() {
     return (
       <div>
+        <input id="input-sequence" type="text"/>
+        <input id="input-dbn" type="text"/>
+        <button onClick={this.updateSequence}/>
+        <div id="error">{this.state.error}</div>
         <Model
           bases={this.state.bases}
           dbn={this.state.dbn}
@@ -140,7 +200,6 @@ var App = React.createClass({
       </div>
     )
   }
-
 });
 
 ReactDOM.render(<App/>, document.getElementById('root'));

@@ -17,8 +17,6 @@ var Model = React.createClass({
     this.drag = force.drag().on('dragstart', this.dragstart);
 
     return {
-      bases: "AT",
-      dbn: "()",
       force: force
     }
   },
@@ -68,10 +66,24 @@ var Model = React.createClass({
   },
 
   enterNode: function(selection) {
+    function handleMouseOver(d) {
+      d3.select(this).attr({
+        r: d.size * 2
+      });
+    }
+
+    function handleMouseOut(d) {
+      d3.select(this).attr({
+        r: d.size
+      });
+    }
+
     selection.classed('node', true);
 
     selection.append('circle')
       .attr("r", (d) => d.size)
+      .on('mouseover', handleMouseOver)
+      .on('mouseout', handleMouseOut)
       .call(this.drag)
 
     selection.append('text')
@@ -127,6 +139,14 @@ var App = React.createClass({
   componentDidMount() {
     //TODO: just for testing, remove later:
     this.setState({error: 'testing'});
+  },
+
+  toggleHighlight: function(event, node) {
+    if(event.target.classList.contains('highlight')) {
+      event.target.classList.remove('highlight');
+    } else {
+      event.target.classList.add('highlight');
+    }
   },
 
   updateSequence: function() {
@@ -193,18 +213,36 @@ var App = React.createClass({
     });
   },
 
+  renderSequence: function() {
+    var sequence = this.state.nodes.map((val, i) => {
+      return (
+        <span
+          className="sequence-base"
+          onMouseOver={this.toggleHighlight}
+          onMouseLeave={this.toggleHighlight}
+        >
+          {val.base}
+        </span>
+      )
+    });
+
+    return sequence;
+  },
+
   render: function() {
     return (
       <div>
         <input id="input-sequence" type="text"/>
         <input id="input-dbn" type="text"/>
         <button className="display-btn" onClick={this.updateSequence}>Display</button>
+        <div>{this.renderSequence()}</div>
         <div id="error">{this.state.error}</div>
         <Model
           links={this.state.links}
           nodes={this.state.nodes}
           svgHeight={this.state.svgHeight}
           svgWidth={this.state.svgWidth}
+          toggleHighlight={this.toggleHighlight}
         />
       </div>
     )

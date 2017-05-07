@@ -27,3 +27,11 @@ body {
   stroke: #cccccc;
   stroke-opacity: .6;
 }
+
+.sequence-base:hover {
+  cursor: default;
+}
+
+.highlight {
+  color: red;
+}

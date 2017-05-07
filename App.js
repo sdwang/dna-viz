@@ -27,6 +27,9 @@ var Model = React.createClass({
     this.d3Graph = d3.select(ReactDOM.findDOMNode(this.refs.graph));
 
     var d3Nodes = this.d3Graph.selectAll('.node')
+      .data([]).exit().remove();
+
+    var d3Nodes = this.d3Graph.selectAll('.node')
       .data(nextProps.nodes, (node) => node.key);
     d3Nodes.enter().append('g').call(this.enterNode);
     d3Nodes.exit().remove();
@@ -160,7 +163,7 @@ var App = React.createClass({
         return;
       }
       if(i > 0) {
-        links.push({source: i - 1, target: i, strokeWidth: 2});
+        links.push({source: i - 1, target: i, strokeWidth: 2, key: i});
       }
       if(dbn[i] === "(") {
         basePairStack.push(i);
@@ -170,7 +173,7 @@ var App = React.createClass({
           this.setState({error: "Invalid DBN.  Missing starting parenthesis"});
           return;
         } else {
-          links.push({source: basePairStack.pop(), target: i, strokeWidth: 4});
+          links.push({source: basePairStack.pop(), target: i, strokeWidth: 4, key: i + '.1'});
         }
       }
     }
@@ -180,8 +183,8 @@ var App = React.createClass({
       return;
     }
 
-    console.log(nodes)
-    console.log(links)
+    console.log('nodes: ', nodes)
+    console.log('links: ', links)
 
     this.setState({
       error: "",

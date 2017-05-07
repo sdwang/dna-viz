@@ -70,12 +70,14 @@ var Model = React.createClass({
       d3.select(this).attr({
         r: d.size * 2
       });
+      document.getElementById('sequence').children[d.key].classList.add('highlight');
     }
 
     function handleMouseOut(d) {
       d3.select(this).attr({
         r: d.size
       });
+      document.getElementById('sequence').children[d.key].classList.remove('highlight');
     }
 
     selection.classed('node', true);
@@ -146,7 +148,7 @@ var Model = React.createClass({
   render: function() {
     return (
       <div>
-        <div>{this.renderSequence()}</div>
+        <div id="sequence">{this.renderSequence()}</div>
         <svg width={this.props.svgWidth} height={this.props.svgHeight}>
           <g ref='graph' />
         </svg>

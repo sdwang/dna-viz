@@ -42,7 +42,7 @@ var Model = React.createClass({
     this.state.force.nodes(nextProps.nodes).links(nextProps.links);
     this.state.force.start();
 
-    return false;
+    return true;
   },
 
   componentDidMount: function() {
@@ -92,6 +92,21 @@ var Model = React.createClass({
       .text((d) => d.base);
   },
 
+  toggleHighlight: function(node, event) {
+    this.d3Graph = d3.select(ReactDOM.findDOMNode(this.refs.graph));
+    var nodeCircle = this.d3Graph.selectAll('.node')
+      .filter(function (d) { return d.key === node.key;})
+      .select('circle')
+
+    if(event.target.classList.contains('highlight')) {
+      event.target.classList.remove('highlight');
+      nodeCircle.attr({r: node.size})
+    } else {
+      event.target.classList.add('highlight');
+      nodeCircle.attr({r: node.size * 2})
+    }
+  },
+
   updateGraph: function(selection) {
     console.log('updating graph')
     selection.selectAll('.node')
@@ -111,9 +126,27 @@ var Model = React.createClass({
     selection.attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
   },
 
+  renderSequence: function() {
+    var sequence = this.props.nodes.map((node, i) => {
+      return (
+        <span
+          className="sequence-base"
+          onMouseOver={this.toggleHighlight.bind(this, node)}
+          onMouseLeave={this.toggleHighlight.bind(this, node)}
+          key={i}
+        >
+          {node.base}
+        </span>
+      )
+    });
+
+    return sequence;
+  },
+
   render: function() {
     return (
       <div>
+        <div>{this.renderSequence()}</div>
         <svg width={this.props.svgWidth} height={this.props.svgHeight}>
           <g ref='graph' />
         </svg>
@@ -139,14 +172,6 @@ var App = React.createClass({
   componentDidMount() {
     //TODO: just for testing, remove later:
     this.setState({error: 'testing'});
-  },
-
-  toggleHighlight: function(event, node) {
-    if(event.target.classList.contains('highlight')) {
-      event.target.classList.remove('highlight');
-    } else {
-      event.target.classList.add('highlight');
-    }
   },
 
   updateSequence: function() {
@@ -213,29 +238,12 @@ var App = React.createClass({
     });
   },
 
-  renderSequence: function() {
-    var sequence = this.state.nodes.map((val, i) => {
-      return (
-        <span
-          className="sequence-base"
-          onMouseOver={this.toggleHighlight}
-          onMouseLeave={this.toggleHighlight}
-        >
-          {val.base}
-        </span>
-      )
-    });
-
-    return sequence;
-  },
-
   render: function() {
     return (
       <div>
         <input id="input-sequence" type="text"/>
         <input id="input-dbn" type="text"/>
         <button className="display-btn" onClick={this.updateSequence}>Display</button>
-        <div>{this.renderSequence()}</div>
         <div id="error">{this.state.error}</div>
         <Model
           links={this.state.links}

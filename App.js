@@ -6,19 +6,15 @@ var colorScheme = {
   "G": 2,
   "C": 3
 }
+var force = d3.layout.force()
+  .charge(-300)
+  .linkDistance(50)
 
 var Model = React.createClass({
   getInitialState: function() {
-    var force = d3.layout.force()
-      .charge(-300)
-      .linkDistance(50)
-      .size([this.props.svgWidth, this.props.svgHeight]);
-
     this.drag = force.drag().on('dragstart', this.dragstart);
 
-    return {
-      force: force
-    }
+    return {};
   },
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -39,15 +35,15 @@ var Model = React.createClass({
     d3Links.exit().remove();
     d3Links.call(this.updateLink);
 
-    this.state.force.nodes(nextProps.nodes).links(nextProps.links);
-    this.state.force.start();
+    force.nodes(nextProps.nodes).links(nextProps.links);
+    force.start();
 
     return true;
   },
 
   componentDidMount: function() {
     this.d3Graph = d3.select(ReactDOM.findDOMNode(this.refs.graph));
-    this.state.force.on('tick', (tick) => {
+    force.on('tick', (tick) => {
       this.d3Graph.call(this.updateGraph);
     });
   },
@@ -169,6 +165,10 @@ var App = React.createClass({
       svgHeight: svgHeight,
       svgWidth: svgWidth
     }
+  },
+
+  componentWillMount() {
+    force.size([this.state.svgWidth, this.state.svgHeight]);
   },
 
   componentDidMount() {

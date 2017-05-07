@@ -14,7 +14,6 @@ var Model = React.createClass({
   getInitialState: function() {
     this.drag = force.drag().on('dragstart', this.dragstart);
     this.selected_node = null;
-    this.target_node = null;
 
     return {};
   },
@@ -79,13 +78,16 @@ var Model = React.createClass({
         .attr("y2", 0);
     } else {
       console.log('another base');
-      this.selected_node = null;
+      console.log(d)
+      console.log(this.selected_node);
       this.drag_line
         .attr("class", "drag_line_hidden")
         .attr("x1", 0)
         .attr("y1", 0)
         .attr("x2", 0)
         .attr("y2", 0);
+      this.props.addLink(this.selected_node.key, d.key);
+      this.selected_node = null;
     }
   },
 
@@ -194,6 +196,7 @@ var Model = React.createClass({
     return (
       <div>
         <div id="sequence">{this.renderSequence()}</div>
+        <div id="dbn">{this.props.dbn}</div>
         <svg width={this.props.svgWidth} height={this.props.svgHeight}>
           <g ref='graph' />
         </svg>
@@ -208,9 +211,17 @@ var App = React.createClass({
     var svgHeight = 1200;
 
     return {
+      dbn: "",
       error: "",
-      links: [{source: 1, target: 0, strokeWidth: 5}],
-      nodes: [{base: "A", group: 0, size: 5, key: 0, x: 300, y: 300}, {base: "T", group: 1, size: 5, key: 1, x: 300, y: 500}],
+      links: [
+        {source: 0, target: 1, strokeWidth: 5, key: 0},
+        {source: 1, target: 2, strokeWidth: 5, key: 1}
+      ],
+      nodes: [
+        {base: "A", group: 0, size: 5, key: 0, x: 300, y: 300},
+        {base: "T", group: 1, size: 5, key: 1, x: 300, y: 500},
+        {base: "C", group: 2, size: 5, key: 2, x: 300, y: 600}
+      ],
       svgHeight: svgHeight,
       svgWidth: svgWidth
     }
@@ -223,6 +234,29 @@ var App = React.createClass({
   componentDidMount() {
     //TODO: just for testing, remove later:
     this.setState({error: 'testing'});
+  },
+
+  addLink: function(source, target) {
+    var links = this.state.links.slice();
+    links.push({
+      source: source,
+      target: target,
+      strokeWidth: 5,
+      key: links.length + 1
+    });
+
+    var dbn = this.state.dbn;
+
+    if(source < target) {
+      dbn = dbn.slice(0, source) + '(' + dbn.slice(source + 1, target) + ')' + dbn.slice(target + 1);
+    } else {
+      dbn = dbn.slice(0, target) + '(' + dbn.slice(target + 1, source) + ')' + dbn.slice(source + 1);
+    }
+
+    this.setState({
+      dbn: dbn,
+      links: links
+    });
   },
 
   updateSequence: function() {
@@ -283,6 +317,7 @@ var App = React.createClass({
     console.log('links: ', links)
 
     this.setState({
+      dbn: dbn,
       error: "",
       nodes: nodes,
       links: links
@@ -297,6 +332,8 @@ var App = React.createClass({
         <button className="display-btn" onClick={this.updateSequence}>Display</button>
         <div id="error">{this.state.error}</div>
         <Model
+          addLink={this.addLink}
+          dbn={this.state.dbn}
           links={this.state.links}
           nodes={this.state.nodes}
           svgHeight={this.state.svgHeight}

@@ -47,3 +47,11 @@ body {
   stroke-width: 0;
   pointer-events: none;
 }
+
+#sequence {
+  font-family: "Courier New", Courier, monospace;
+}
+
+#dbn {
+  font-family: "Courier New", Courier, monospace;
+}

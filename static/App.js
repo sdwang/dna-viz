@@ -232,6 +232,14 @@ var App = React.createClass({
   },
 
   componentDidMount() {
+    var pathname = window.location.pathname.split('/');
+    if(window.location.pathname.split('/').length === 3) {
+      var sequence = pathname[1];
+      var dbn = pathname[2];
+
+      document.getElementById('input-sequence').value = sequence;
+      document.getElementById('input-dbn').value = dbn;
+    }
     //TODO: just for testing, remove later:
     this.setState({error: 'testing'});
   },
@@ -259,7 +267,26 @@ var App = React.createClass({
     });
   },
 
+  shareLink: function() {
+    var link = window.location.origin +
+      '/' + document.getElementById('input-sequence').value +
+      '/' + document.getElementById('input-dbn').value;
+
+    var shareLinkInput = document.getElementById('share-link');
+    shareLinkInput.value = link;
+    shareLinkInput.classList.remove('collapse');
+    shareLinkInput.classList.add('expand');
+    shareLinkInput.focus();
+    shareLinkInput.select();
+
+  },
+
   updateSequence: function() {
+    var shareLinkInput = document.getElementById('share-link');
+    shareLinkInput.value = "";
+    shareLinkInput.classList.remove('expand');
+    shareLinkInput.classList.add('collapse');
+
     var sequence = document.getElementById('input-sequence').value;
     var dbn = document.getElementById('input-dbn').value;
 
@@ -330,6 +357,8 @@ var App = React.createClass({
         <input id="input-sequence" type="text"/>
         <input id="input-dbn" type="text"/>
         <button className="display-btn" onClick={this.updateSequence}>Display</button>
+        <button className="share-btn" onClick={this.shareLink}>Share</button>
+        <input id="share-link" className="collapse" type="url"/>
         <div id="error">{this.state.error}</div>
         <Model
           addLink={this.addLink}

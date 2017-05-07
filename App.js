@@ -13,6 +13,8 @@ var force = d3.layout.force()
 var Model = React.createClass({
   getInitialState: function() {
     this.drag = force.drag().on('dragstart', this.dragstart);
+    this.selected_node = null;
+    this.target_node = null;
 
     return {};
   },
@@ -43,13 +45,48 @@ var Model = React.createClass({
 
   componentDidMount: function() {
     this.d3Graph = d3.select(ReactDOM.findDOMNode(this.refs.graph));
+    this.drag_line = this.d3Graph.append("line")
+      .attr("class", "drag_line_hidden")
+      .attr("x1", 0)
+      .attr("y1", 0)
+      .attr("x2", 0)
+      .attr("y2", 0);
     force.on('tick', (tick) => {
       this.d3Graph.call(this.updateGraph);
     });
   },
 
   dblclick: function(d) {
-    d3.select(this).classed("fixed", d.fixed = false);
+    if(this.selected_node === null) {
+      this.selected_node = d;
+
+      var w = d3.select(window)
+      .on("mousemove", this.mousemove);
+
+      this.drag_line
+      .attr("class", "drag_line")
+      .attr("x1", this.selected_node.x)
+      .attr("y1", this.selected_node.y)
+      .attr("x2", this.selected_node.x)
+      .attr("y2", this.selected_node.y);
+    } else if(d === this.selected_node) {
+      this.selected_node = null;
+      this.drag_line
+        .attr("class", "drag_line_hidden")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", 0)
+        .attr("y2", 0);
+    } else {
+      console.log('another base');
+      this.selected_node = null;
+      this.drag_line
+        .attr("class", "drag_line_hidden")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", 0)
+        .attr("y2", 0);
+    }
   },
 
   dragstart: function(d) {
@@ -83,11 +120,23 @@ var Model = React.createClass({
       .on('mouseover', handleMouseOver)
       .on('mouseout', handleMouseOut)
       .call(this.drag)
+      .on('dblclick', this.dblclick)
 
     selection.append('text')
       .attr("x", (d) => d.size + 5)
       .attr("dy", ".35em")
       .text((d) => d.base);
+  },
+
+  mousemove: function() {
+    if(!this.selected_node) {
+      return;
+    }
+    this.drag_line
+      .attr("x1", this.selected_node.x)
+      .attr("y1", this.selected_node.y)
+      .attr("x2", d3.mouse(this.d3Graph.node())[0])
+      .attr("y2", d3.mouse(this.d3Graph.node())[1]);
   },
 
   toggleHighlight: function(node, event) {

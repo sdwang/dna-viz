@@ -229,8 +229,8 @@ var Model = React.createClass({
   render: function() {
     return (
       <div>
-        <div id="sequence">{this.renderSequence()}</div>
-        <div id="dbn">{this.props.dbn}</div>
+        <div className="graph-text" id="sequence">{this.renderSequence()}</div>
+        <div className="graph-text" id="dbn">{this.props.dbn}</div>
         <svg width={this.props.svgWidth} height={this.props.svgHeight}>
           <g ref='graph' />
         </svg>
@@ -257,7 +257,7 @@ var App = React.createClass({
       strokeWidthBackbone: 2,
       strokeWidthBasePair: 5,
       svgHeight: 900,
-      svgWidth: 900
+      svgWidth: 1350
     }
   },
 
@@ -468,19 +468,28 @@ var App = React.createClass({
 
   render: function() {
     return (
-      <div>
+      <div id="app">
         <h1>DNA Visualizer</h1>
-        <input id="input-sequence" type="text"/>
-        <input id="input-dbn" type="text"/>
-        <button className="display-btn" onClick={this.updateSequence}>Display</button>
-        <button className="share-btn" onClick={this.shareLink}>Share</button>
-        <input id="share-link" className="collapse" type="url"/>
-        <div>
-          <h2>
-            Colors:
-          </h2>
+        <div></div>
+        <div className="toolbar-row">
           <div>
-            <span>A:</span>
+            <span className="input-label">DNA Sequence: </span>
+            <input id="input-sequence" type="text"/>
+          </div>
+          <div>
+            <span className="input-label">Dot-Bracket Notation (DBN): </span>
+            <input id="input-dbn" type="text"/>
+          </div>
+          <button className="display-btn red" onClick={this.updateSequence}>Display</button>
+          <button className="share-btn" onClick={this.shareLink}>Share</button>
+          <input id="share-link" className="collapse" type="url"/>
+        </div>
+        <div className="toolbar-row">
+          <span className="input-label">
+            Color Picker:
+          </span>
+          <div>
+            <span className="input-label">A:</span>
             <select
               name="A"
               defaultValue={this.state.colorScheme["A"]}
@@ -490,7 +499,7 @@ var App = React.createClass({
               </select>
           </div>
           <div>
-            <span>T:</span>
+            <span className="input-label">T:</span>
             <select
               name="T"
               defaultValue={this.state.colorScheme["T"]}
@@ -500,7 +509,7 @@ var App = React.createClass({
               </select>
           </div>
           <div>
-            <span>G:</span>
+            <span className="input-label">G:</span>
             <select
               name="G"
               defaultValue={this.state.colorScheme["G"]}
@@ -510,7 +519,7 @@ var App = React.createClass({
               </select>
           </div>
           <div>
-            <span>C:</span>
+            <span className="input-label">C:</span>
             <select
               name="C"
               defaultValue={this.state.colorScheme["C"]}
@@ -520,49 +529,51 @@ var App = React.createClass({
               </select>
           </div>
         </div>
-        <div>
-          <span>Node Size: </span>
-          <input
-            onChange={this.updateNodeSize}
-            type="number"
-            step="1"
-            min="1"
-            max="20"
-            defaultValue={this.state.nodeSize}
-          />
-        </div>
-        <div>
-          <span>Base Pair Stroke Width: </span>
-          <input
-            onChange={this.updateStrokeWidthBasePair}
-            type="number"
-            step="1"
-            min="1"
-            max="10"
-            defaultValue={this.state.strokeWidthBasePair}
-          />
-        </div>
-        <div>
-          <span>Phosphate Backbone Stroke Width: </span>
-          <input
-            onChange={this.updateStrokeWidthBackbone}
-            type="number"
-            step="1"
-            min="1"
-            max="10"
-            defaultValue={this.state.strokeWidthBackbone}
-          />
-        </div>
-        <div>
-          <span>Label Font Size: </span>
-          <input
-            onChange={this.updateLabelFontSize}
-            type="number"
-            step="1"
-            min="1"
-            max="32"
-            defaultValue={this.state.labelFontSize}
-          />
+        <div className="toolbar-row">
+          <div>
+            <span className="input-label">Node Size: </span>
+            <input
+              onChange={this.updateNodeSize}
+              type="number"
+              step="1"
+              min="1"
+              max="20"
+              defaultValue={this.state.nodeSize}
+            />
+          </div>
+          <div>
+            <span className="input-label">Base Pair Stroke Width: </span>
+            <input
+              onChange={this.updateStrokeWidthBasePair}
+              type="number"
+              step="1"
+              min="1"
+              max="10"
+              defaultValue={this.state.strokeWidthBasePair}
+            />
+          </div>
+          <div>
+            <span className="input-label">Phosphate Backbone Stroke Width: </span>
+            <input
+              onChange={this.updateStrokeWidthBackbone}
+              type="number"
+              step="1"
+              min="1"
+              max="10"
+              defaultValue={this.state.strokeWidthBackbone}
+            />
+          </div>
+          <div>
+            <span className="input-label">Label Font Size: </span>
+            <input
+              onChange={this.updateLabelFontSize}
+              type="number"
+              step="1"
+              min="1"
+              max="32"
+              defaultValue={this.state.labelFontSize}
+            />
+          </div>
         </div>
         <div id="error">{this.state.error}</div>
         <Model

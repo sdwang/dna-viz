@@ -31,6 +31,16 @@ var Model = React.createClass({
       .style('fill', (d) => color(nextProps.colorScheme[d.base]))
     }
 
+    if(this.props.strokeWidthBackbone !== nextProps.strokeWidthBackbone) {
+      this.d3Graph.selectAll('.link.backbone')
+        .style('stroke-width', nextProps.strokeWidthBackbone);
+    }
+
+    if(this.props.strokeWidthBasePair !== nextProps.strokeWidthBasePair) {
+      this.d3Graph.selectAll('.link.base-pair')
+        .style('stroke-width', nextProps.strokeWidthBasePair);
+    }
+
     var d3Links = this.d3Graph.selectAll('.link')
       .data(nextProps.links, (link) => link.key);
     d3Links.enter().insert('line', '.node').call(this.enterLink);
@@ -98,7 +108,13 @@ var Model = React.createClass({
 
   enterLink: function(selection) {
     selection.classed('link', true)
-      .attr("stroke-width", (d) => d.strokeWidth)
+      .attr("stroke-width", (d) => {
+        if(d.class === "backbone") {
+          return this.props.strokeWidthBackbone;
+        } else if(d.class === "base-pair") {
+          return this.props.strokeWidthBasePair;
+        }
+      })
       .attr("class", (d) => 'link ' + d.class);
   },
 
@@ -247,6 +263,8 @@ var App = React.createClass({
         // {base: "C", group: 2, size: 5, key: 2, x: 300, y: 600}
       ],
       nodeSize: 10,
+      strokeWidthBackbone: 2,
+      strokeWidthBasePair: 5,
       svgHeight: 900,
       svgWidth: 900
     }
@@ -422,6 +440,30 @@ var App = React.createClass({
     });
   },
 
+  updateStrokeWidthBackbone: function(event) {
+    var val = event.target.value;
+    if(val > 10) {
+      val = 10;
+    } else if(val < 1) {
+      val = 1;
+    }
+    val = Math.floor(val);
+    event.target.value = val;
+    this.setState({strokeWidthBackbone: event.target.value});
+  },
+
+  updateStrokeWidthBasePair: function(event) {
+    var val = event.target.value;
+    if(val > 10) {
+      val = 10;
+    } else if(val < 1) {
+      val = 1;
+    }
+    val = Math.floor(val);
+    event.target.value = val;
+    this.setState({strokeWidthBasePair: event.target.value});
+  },
+
   render: function() {
     return (
       <div>
@@ -487,6 +529,28 @@ var App = React.createClass({
             defaultValue={this.state.nodeSize}
           />
         </div>
+        <div>
+          <span>Base Pair Stroke Width: </span>
+          <input
+            onChange={this.updateStrokeWidthBasePair}
+            type="number"
+            step="1"
+            min="1"
+            max="10"
+            defaultValue={this.state.strokeWidthBasePair}
+          />
+        </div>
+        <div>
+          <span>Phosphate Backbone Stroke Width: </span>
+          <input
+            onChange={this.updateStrokeWidthBackbone}
+            type="number"
+            step="1"
+            min="1"
+            max="10"
+            defaultValue={this.state.strokeWidthBackbone}
+          />
+        </div>
         <div id="error">{this.state.error}</div>
         <Model
           addLink={this.addLink}
@@ -495,6 +559,8 @@ var App = React.createClass({
           links={this.state.links}
           nodes={this.state.nodes}
           nodeSize={this.state.nodeSize}
+          strokeWidthBackbone={this.state.strokeWidthBackbone}
+          strokeWidthBasePair={this.state.strokeWidthBasePair}
           svgHeight={this.state.svgHeight}
           svgWidth={this.state.svgWidth}
           toggleHighlight={this.toggleHighlight}

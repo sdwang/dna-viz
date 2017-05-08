@@ -103,16 +103,17 @@ var Model = React.createClass({
   },
 
   enterNode: function(selection) {
+    var self = this;
     function handleMouseOver(d) {
       d3.select(this).attr({
-        r: d.size * 2
+        r: self.props.nodeSize * 2
       });
       document.getElementById('sequence').children[d.key].classList.add('highlight');
     }
 
     function handleMouseOut(d) {
       d3.select(this).attr({
-        r: d.size
+        r: self.props.nodeSize
       });
       document.getElementById('sequence').children[d.key].classList.remove('highlight');
     }
@@ -120,7 +121,7 @@ var Model = React.createClass({
     selection.classed('node', true);
 
     selection.append('circle')
-      .attr("r", (d) => d.size)
+      .attr("r", this.props.nodeSize)
       .style("fill", (d) => color(this.props.colorScheme[d.base]))
       .on('mouseover', handleMouseOver)
       .on('mouseout', handleMouseOut)
@@ -128,7 +129,7 @@ var Model = React.createClass({
       .on('dblclick', this.dblclick)
 
     selection.append('text')
-      .attr("x", (d) => d.size + 5)
+      .attr("x", Number(this.props.nodeSize) + 5)
       .attr("dy", ".35em")
       .text((d) => {
         if(d.key === 0) {
@@ -227,17 +228,13 @@ var Model = React.createClass({
 
 var App = React.createClass({
   getInitialState: function() {
-    var svgWidth = 1200;
-    var svgHeight = 1200;
-    var colorScheme = {
-      "A": 2,
-      "T": 4,
-      "G": 3,
-      "C": 10
-    }
-
     return {
-      colorScheme: colorScheme,
+      colorScheme: {
+        "A": 2,
+        "T": 4,
+        "G": 3,
+        "C": 10
+      },
       dbn: "",
       error: "",
       links: [
@@ -249,8 +246,9 @@ var App = React.createClass({
         // {base: "T", group: 1, size: 5, key: 1, x: 300, y: 500},
         // {base: "C", group: 2, size: 5, key: 2, x: 300, y: 600}
       ],
-      svgHeight: svgHeight,
-      svgWidth: svgWidth
+      nodeSize: 10,
+      svgHeight: 900,
+      svgWidth: 900
     }
   },
 
@@ -277,7 +275,8 @@ var App = React.createClass({
       source: source,
       target: target,
       strokeWidth: 5,
-      key: links.length + 1
+      key: links.length + 1,
+      class: 'base-pair'
     });
 
     var dbn = this.state.dbn;
@@ -287,6 +286,8 @@ var App = React.createClass({
     } else {
       dbn = dbn.slice(0, target) + '(' + dbn.slice(target + 1, source) + ')' + dbn.slice(source + 1);
     }
+
+    document.getElementById('input-dbn').value = dbn;
 
     this.setState({
       dbn: dbn,
@@ -341,6 +342,18 @@ var App = React.createClass({
     });
   },
 
+  updateNodeSize: function(event) {
+    var val = event.target.value;
+    if(val > 20) {
+      val = 20;
+    } else if(val < 1) {
+      val = 1;
+    }
+    val = Math.floor(val);
+    event.target.value = val;
+    this.setState({nodeSize: event.target.value});
+  },
+
   updateSequence: function() {
     var shareLinkInput = document.getElementById('share-link');
     shareLinkInput.value = "";
@@ -365,8 +378,7 @@ var App = React.createClass({
 
       nodes.push({
         base: sequence[i],
-        key: i,
-        size: 8
+        key: i
       });
     }
 
@@ -413,45 +425,68 @@ var App = React.createClass({
   render: function() {
     return (
       <div>
+        <h1>DNA Visualizer</h1>
         <input id="input-sequence" type="text"/>
         <input id="input-dbn" type="text"/>
         <button className="display-btn" onClick={this.updateSequence}>Display</button>
         <button className="share-btn" onClick={this.shareLink}>Share</button>
-        <div>
-          <span>A:</span>
-          <select
-            name="A"
-            defaultValue={this.state.colorScheme["A"]}
-            onChange={this.updateColorScheme.bind(this, "A")}
-          >
-            {this.generateColorOptions("A")}
-          </select>
-          <span>T:</span>
-          <select
-            name="T"
-            defaultValue={this.state.colorScheme["T"]}
-            onChange={this.updateColorScheme.bind(this, "T")}
-          >
-            {this.generateColorOptions("T")}
-          </select>
-          <span>G:</span>
-          <select
-            name="G"
-            defaultValue={this.state.colorScheme["G"]}
-            onChange={this.updateColorScheme.bind(this, "G")}
-          >
-            {this.generateColorOptions("G")}
-          </select>
-          <span>C:</span>
-          <select
-            name="C"
-            defaultValue={this.state.colorScheme["C"]}
-            onChange={this.updateColorScheme.bind(this, "C")}
-          >
-            {this.generateColorOptions("C")}
-          </select>
-        </div>
         <input id="share-link" className="collapse" type="url"/>
+        <div>
+          <h2>
+            Colors:
+          </h2>
+          <div>
+            <span>A:</span>
+            <select
+              name="A"
+              defaultValue={this.state.colorScheme["A"]}
+              onChange={this.updateColorScheme.bind(this, "A")}
+              >
+                {this.generateColorOptions("A")}
+              </select>
+          </div>
+          <div>
+            <span>T:</span>
+            <select
+              name="T"
+              defaultValue={this.state.colorScheme["T"]}
+              onChange={this.updateColorScheme.bind(this, "T")}
+              >
+                {this.generateColorOptions("T")}
+              </select>
+          </div>
+          <div>
+            <span>G:</span>
+            <select
+              name="G"
+              defaultValue={this.state.colorScheme["G"]}
+              onChange={this.updateColorScheme.bind(this, "G")}
+              >
+                {this.generateColorOptions("G")}
+              </select>
+          </div>
+          <div>
+            <span>C:</span>
+            <select
+              name="C"
+              defaultValue={this.state.colorScheme["C"]}
+              onChange={this.updateColorScheme.bind(this, "C")}
+              >
+                {this.generateColorOptions("C")}
+              </select>
+          </div>
+        </div>
+        <div>
+          <span>Node Size: </span>
+          <input
+            onChange={this.updateNodeSize}
+            type="number"
+            step="1"
+            min="1"
+            max="20"
+            defaultValue={this.state.nodeSize}
+          />
+        </div>
         <div id="error">{this.state.error}</div>
         <Model
           addLink={this.addLink}
@@ -459,6 +494,7 @@ var App = React.createClass({
           dbn={this.state.dbn}
           links={this.state.links}
           nodes={this.state.nodes}
+          nodeSize={this.state.nodeSize}
           svgHeight={this.state.svgHeight}
           svgWidth={this.state.svgWidth}
           toggleHighlight={this.toggleHighlight}

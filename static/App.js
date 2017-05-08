@@ -470,7 +470,28 @@ var App = React.createClass({
     return (
       <div id="app">
         <h1>DNA Visualizer</h1>
-        <div></div>
+        <div id="help-text">
+          Instructions: <br/>
+          Input a DNA sequence and Dot-Bracket notation to display on the graph below.
+          Accepted DNA bases are "A", "T", "G", "C" (case sensitive).
+          Dot-Bracket notation consists of "." for the phosphate backbone and open and
+          closing parenthesis for base-pair connections.
+          <br/>
+          <br/>
+          Graph Interactivity: <br/>
+          Hover over a node to see the corresponding base in the sequence text.  Or hover
+          over a base to see the corresponding node.<br/>
+          To create a new base-pair connection, double click on a node.  Do not hold down on
+          the mouse.  Move your mouse to another node and double click again.  To cancel, double click
+          on the selected node.<br/>
+          To reposition nodes, single click on a node and drag it to a new position.  Release
+          the mouse to confirm the position.
+          <br/>
+          <br/>
+          Example:<br/>
+          DNA: TTGGGGGGACTGGGGCTCCCATTCGTTGCCTTTATAAATCCTTGCAAGCCAATTAACAGGTTGGTGAGGGGCTTGGGTGAAAAGGTGCTTAAGACTCCGT<br/>
+          DBN: ...(((((.(...).)))))........(((((.....((..(.((((((..(((.((...)).)))..)))))).).)))))))...............
+        </div>
         <div className="toolbar-row">
           <div>
             <span className="input-label">DNA Sequence: </span>

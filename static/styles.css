@@ -169,6 +169,10 @@ Graph
 Toolbar
 ******/
 
+#help-text {
+  margin: 24px 12px;
+}
+
 #error {
   color: #DC143C;
   margin: 24px 12px;

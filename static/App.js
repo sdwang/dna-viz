@@ -88,9 +88,6 @@ var Model = React.createClass({
         .attr("x2", 0)
         .attr("y2", 0);
     } else {
-      console.log('another base');
-      console.log(d)
-      console.log(this.selected_node);
       this.drag_line
         .attr("class", "drag_line_hidden")
         .attr("x1", 0)
@@ -187,15 +184,14 @@ var Model = React.createClass({
 
     if(event.target.classList.contains('highlight')) {
       event.target.classList.remove('highlight');
-      nodeCircle.attr({r: node.size})
+      nodeCircle.attr({r: this.props.nodeSize})
     } else {
       event.target.classList.add('highlight');
-      nodeCircle.attr({r: node.size * 2})
+      nodeCircle.attr({r: this.props.nodeSize * 2})
     }
   },
 
   updateGraph: function(selection) {
-    console.log('updating graph')
     selection.selectAll('.node')
       .call(this.updateNode);
     selection.selectAll('.link')
@@ -255,15 +251,8 @@ var App = React.createClass({
       dbn: "",
       error: "",
       labelFontSize: 12,
-      links: [
-        // {source: 0, target: 1, strokeWidth: 5, key: 0},
-        // {source: 1, target: 2, strokeWidth: 5, key: 1}
-      ],
-      nodes: [
-        // {base: "A", group: 0, size: 5, key: 0, x: 300, y: 300},
-        // {base: "T", group: 1, size: 5, key: 1, x: 300, y: 500},
-        // {base: "C", group: 2, size: 5, key: 2, x: 300, y: 600}
-      ],
+      links: [],
+      nodes: [],
       nodeSize: 10,
       strokeWidthBackbone: 2,
       strokeWidthBasePair: 5,
@@ -285,8 +274,6 @@ var App = React.createClass({
       document.getElementById('input-sequence').value = sequence;
       document.getElementById('input-dbn').value = dbn;
     }
-    //TODO: just for testing, remove later:
-    this.setState({error: 'testing'});
   },
 
   addLink: function(source, target) {
@@ -362,6 +349,7 @@ var App = React.createClass({
     });
   },
 
+  //TODO: consolidate update size methods
   updateLabelFontSize: function(event) {
     var val = event.target.value;
     if(val > 32) {
@@ -374,6 +362,7 @@ var App = React.createClass({
     this.setState({labelFontSize: event.target.value});
   },
 
+  //TODO: consolidate update size methods
   updateNodeSize: function(event) {
     var val = event.target.value;
     if(val > 20) {
@@ -443,9 +432,6 @@ var App = React.createClass({
       return;
     }
 
-    console.log('nodes: ', nodes)
-    console.log('links: ', links)
-
     this.setState({
       dbn: dbn,
       error: "",
@@ -454,6 +440,7 @@ var App = React.createClass({
     });
   },
 
+  //TODO: consolidate update size methods
   updateStrokeWidthBackbone: function(event) {
     var val = event.target.value;
     if(val > 10) {
@@ -466,6 +453,7 @@ var App = React.createClass({
     this.setState({strokeWidthBackbone: event.target.value});
   },
 
+  //TODO: consolidate update size methods
   updateStrokeWidthBasePair: function(event) {
     var val = event.target.value;
     if(val > 10) {

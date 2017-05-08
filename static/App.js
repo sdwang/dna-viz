@@ -127,7 +127,15 @@ var Model = React.createClass({
     selection.append('text')
       .attr("x", (d) => d.size + 5)
       .attr("dy", ".35em")
-      .text((d) => d.base);
+      .text((d) => {
+        if(d.key === 0) {
+          return "5': " + d.base;
+        } else if(d.key === selection[0].length - 1) {
+          return "3': " + d.base;
+        } else {
+          return d.base;
+        }
+      });
   },
 
   mousemove: function() {

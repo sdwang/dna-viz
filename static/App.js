@@ -1,11 +1,7 @@
 
-var color = d3.scale.category20();
-var colorScheme = {
-  "A": 0,
-  "T": 1,
-  "G": 2,
-  "C": 3
-}
+var color = d3.scale.category10();
+var colors = ["Blue", "Orange", "Green", "Red", "Purple", "Brown", "Pink", "Gray", "Light Green", "Teal"];
+
 var force = d3.layout.force()
   .charge(-300)
   .linkDistance(50)
@@ -29,6 +25,11 @@ var Model = React.createClass({
     d3Nodes.enter().append('g').call(this.enterNode);
     d3Nodes.exit().remove();
     d3Nodes.call(this.updateNode);
+
+    if(this.isColorSchemeNew(nextProps.colorScheme)) {
+      this.d3Graph.selectAll('.node').select('circle')
+      .style('fill', (d) => color(nextProps.colorScheme[d.base]))
+    }
 
     var d3Links = this.d3Graph.selectAll('.link')
       .data(nextProps.links, (link) => link.key);
@@ -97,7 +98,8 @@ var Model = React.createClass({
 
   enterLink: function(selection) {
     selection.classed('link', true)
-      .attr("stroke-width", (d) => d.strokeWidth);
+      .attr("stroke-width", (d) => d.strokeWidth)
+      .attr("class", (d) => 'link ' + d.class);
   },
 
   enterNode: function(selection) {
@@ -119,6 +121,7 @@ var Model = React.createClass({
 
     selection.append('circle')
       .attr("r", (d) => d.size)
+      .style("fill", (d) => color(this.props.colorScheme[d.base]))
       .on('mouseover', handleMouseOver)
       .on('mouseout', handleMouseOut)
       .call(this.drag)
@@ -136,6 +139,15 @@ var Model = React.createClass({
           return d.base;
         }
       });
+  },
+
+  isColorSchemeNew(colorScheme) {
+    for(var k in colorScheme) {
+      if(this.props.colorScheme[k] !== colorScheme) {
+        return true;
+      }
+    }
+    return false;
   },
 
   mousemove: function() {
@@ -217,18 +229,25 @@ var App = React.createClass({
   getInitialState: function() {
     var svgWidth = 1200;
     var svgHeight = 1200;
+    var colorScheme = {
+      "A": 2,
+      "T": 4,
+      "G": 3,
+      "C": 10
+    }
 
     return {
+      colorScheme: colorScheme,
       dbn: "",
       error: "",
       links: [
-        {source: 0, target: 1, strokeWidth: 5, key: 0},
-        {source: 1, target: 2, strokeWidth: 5, key: 1}
+        // {source: 0, target: 1, strokeWidth: 5, key: 0},
+        // {source: 1, target: 2, strokeWidth: 5, key: 1}
       ],
       nodes: [
-        {base: "A", group: 0, size: 5, key: 0, x: 300, y: 300},
-        {base: "T", group: 1, size: 5, key: 1, x: 300, y: 500},
-        {base: "C", group: 2, size: 5, key: 2, x: 300, y: 600}
+        // {base: "A", group: 0, size: 5, key: 0, x: 300, y: 300},
+        // {base: "T", group: 1, size: 5, key: 1, x: 300, y: 500},
+        // {base: "C", group: 2, size: 5, key: 2, x: 300, y: 600}
       ],
       svgHeight: svgHeight,
       svgWidth: svgWidth
@@ -275,6 +294,24 @@ var App = React.createClass({
     });
   },
 
+  generateColorOptions: function(base) {
+    var options = [];
+    for(var i = 0; i < 10; i++) {
+      options.push(
+        <option
+          value={i}
+          key={i}
+          style={{backgroundColor: color(i)}}
+          onClick={this.updateColorScheme.bind(this, base, i)}
+        >
+          {colors[i]}
+        </option>
+      );
+    }
+
+    return options;
+  },
+
   shareLink: function() {
     var link = window.location.origin +
       '/' + document.getElementById('input-sequence').value +
@@ -287,6 +324,21 @@ var App = React.createClass({
     shareLinkInput.focus();
     shareLinkInput.select();
 
+  },
+
+  updateColorScheme: function(base, event) {
+    //TODO: add immutability helper
+    var newColorScheme = {};
+    for(var k in this.state.colorScheme) {
+      if(k === base) {
+        newColorScheme[k] = event.target.value;
+      } else {
+        newColorScheme[k] = this.state.colorScheme[k];
+      }
+    }
+    this.setState({
+      colorScheme: newColorScheme
+    });
   },
 
   updateSequence: function() {
@@ -306,16 +358,15 @@ var App = React.createClass({
     var nodes = [];
 
     for(var i = 0; i < sequence.length; i++) {
-      if(colorScheme[sequence[i]] === undefined) {
+      if(this.state.colorScheme[sequence[i]] === undefined) {
         this.setState({error: 'Invalid sequence.  May only contain "A" , "T" , "G", or "C"'});
         return;
       }
 
       nodes.push({
         base: sequence[i],
-        group: colorScheme[sequence[i]],
         key: i,
-        size: 5
+        size: 8
       });
     }
 
@@ -328,7 +379,7 @@ var App = React.createClass({
         return;
       }
       if(i > 0) {
-        links.push({source: i - 1, target: i, strokeWidth: 2, key: i});
+        links.push({source: i - 1, target: i, strokeWidth: 2, key: i, class: 'backbone'});
       }
       if(dbn[i] === "(") {
         basePairStack.push(i);
@@ -338,7 +389,7 @@ var App = React.createClass({
           this.setState({error: "Invalid DBN.  Missing starting parenthesis"});
           return;
         } else {
-          links.push({source: basePairStack.pop(), target: i, strokeWidth: 4, key: i + '.1'});
+          links.push({source: basePairStack.pop(), target: i, strokeWidth: 5, key: i + '.1', class: 'base-pair'});
         }
       }
     }
@@ -366,10 +417,45 @@ var App = React.createClass({
         <input id="input-dbn" type="text"/>
         <button className="display-btn" onClick={this.updateSequence}>Display</button>
         <button className="share-btn" onClick={this.shareLink}>Share</button>
+        <div>
+          <span>A:</span>
+          <select
+            name="A"
+            defaultValue={this.state.colorScheme["A"]}
+            onChange={this.updateColorScheme.bind(this, "A")}
+          >
+            {this.generateColorOptions("A")}
+          </select>
+          <span>T:</span>
+          <select
+            name="T"
+            defaultValue={this.state.colorScheme["T"]}
+            onChange={this.updateColorScheme.bind(this, "T")}
+          >
+            {this.generateColorOptions("T")}
+          </select>
+          <span>G:</span>
+          <select
+            name="G"
+            defaultValue={this.state.colorScheme["G"]}
+            onChange={this.updateColorScheme.bind(this, "G")}
+          >
+            {this.generateColorOptions("G")}
+          </select>
+          <span>C:</span>
+          <select
+            name="C"
+            defaultValue={this.state.colorScheme["C"]}
+            onChange={this.updateColorScheme.bind(this, "C")}
+          >
+            {this.generateColorOptions("C")}
+          </select>
+        </div>
         <input id="share-link" className="collapse" type="url"/>
         <div id="error">{this.state.error}</div>
         <Model
           addLink={this.addLink}
+          colorScheme={this.state.colorScheme}
           dbn={this.state.dbn}
           links={this.state.links}
           nodes={this.state.nodes}

@@ -84,7 +84,7 @@ Graph
 ****/
 
 .node circle {
-  fill: #888888;
+  /*fill: #888888;*/
   stroke: #fff;
   stroke-width: 2px;
 }
@@ -98,6 +98,14 @@ Graph
 .link {
   stroke: #cccccc;
   stroke-opacity: .6;
+}
+
+.backbone {
+  stroke: #cccccc;
+}
+
+.base-pair {
+  stroke: #7a7a7a;
 }
 
 .drag_line {

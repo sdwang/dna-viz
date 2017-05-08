@@ -90,9 +90,8 @@ Graph
 }
 
 .node text {
-  fill: #888888;
+  fill: #666666;
   stroke: none;
-  font-size: .6em;
 }
 
 .link {

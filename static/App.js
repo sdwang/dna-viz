@@ -147,6 +147,7 @@ var Model = React.createClass({
     selection.append('text')
       .attr("x", Number(this.props.nodeSize) + 5)
       .attr("dy", ".35em")
+      .style("font-size", this.props.labelFontSize)
       .text((d) => {
         if(d.key === 0) {
           return "5': " + d.base;
@@ -253,6 +254,7 @@ var App = React.createClass({
       },
       dbn: "",
       error: "",
+      labelFontSize: 12,
       links: [
         // {source: 0, target: 1, strokeWidth: 5, key: 0},
         // {source: 1, target: 2, strokeWidth: 5, key: 1}
@@ -358,6 +360,18 @@ var App = React.createClass({
     this.setState({
       colorScheme: newColorScheme
     });
+  },
+
+  updateLabelFontSize: function(event) {
+    var val = event.target.value;
+    if(val > 32) {
+      val = 32;
+    } else if(val < 1) {
+      val = 1;
+    }
+    val = Math.floor(val);
+    event.target.value = val;
+    this.setState({labelFontSize: event.target.value});
   },
 
   updateNodeSize: function(event) {
@@ -551,11 +565,23 @@ var App = React.createClass({
             defaultValue={this.state.strokeWidthBackbone}
           />
         </div>
+        <div>
+          <span>Label Font Size: </span>
+          <input
+            onChange={this.updateLabelFontSize}
+            type="number"
+            step="1"
+            min="1"
+            max="32"
+            defaultValue={this.state.labelFontSize}
+          />
+        </div>
         <div id="error">{this.state.error}</div>
         <Model
           addLink={this.addLink}
           colorScheme={this.state.colorScheme}
           dbn={this.state.dbn}
+          labelFontSize={this.state.labelFontSize}
           links={this.state.links}
           nodes={this.state.nodes}
           nodeSize={this.state.nodeSize}
